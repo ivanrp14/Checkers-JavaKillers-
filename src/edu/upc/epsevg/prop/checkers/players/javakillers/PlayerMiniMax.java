@@ -4,11 +4,41 @@
  */
 package edu.upc.epsevg.prop.checkers.players.javakillers;
 
+import edu.upc.epsevg.prop.checkers.GameStatus;
+import edu.upc.epsevg.prop.checkers.IPlayer;
+import edu.upc.epsevg.prop.checkers.PlayerMove;
+
+
 /**
  *
  * @author ivanr
  */
-public class PlayerMiniMax {
+public class PlayerMiniMax implements IPlayer{
+    
+    private long nodesExplorats;
+    final private int infinito = Integer.MAX_VALUE;
+    
+    public int moviment(Tauler t, int color)
+    {
+      //int col = (int)(t.getMida() * Math.random());
+      this.color = color; //Guardem el color que ens passen com a paràmetre
+      System.out.println(color);
+      tiradas = 0;
+      tiradas ++;
+      int mejorMovimiento = MinMax(t, depth);
+      System.out.println("S'ha decit tirar a la columna "+mejorMovimiento+" havent explorat jugades"+tiradas);
+      return mejorMovimiento;
+    }
+
+    public Activitat2(int depth){
+        this.depth = depth;
+    }
+
+    public String nom()
+    {
+      return nom;
+    }
+  
     public int MinMax(Tauler t, int depth){
         int col = 0;
         Integer valor = -infinito-1;
@@ -96,5 +126,20 @@ public class PlayerMiniMax {
             en 1 el valor de la variable depth. Per tant, com ha de pasar nomès calculem la funció heurística a les fulles
             del nostre arbre de minmax*/
         }
+    }
+
+    @Override
+    public PlayerMove move(GameStatus gs) {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public void timeout() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
+
+    @Override
+    public String getName() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
     }
 }
