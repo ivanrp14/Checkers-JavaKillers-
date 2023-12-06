@@ -12,16 +12,15 @@ import edu.upc.epsevg.prop.checkers.PlayerMove;
 import edu.upc.epsevg.prop.checkers.PlayerType;
 import edu.upc.epsevg.prop.checkers.SearchType;
 import java.awt.Point;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
-import java.util.Stack;
+
 
 /**
  *
  * @author ivanr
  */
+
 public class PlayerMiniMax  implements IPlayer, IAuto{
  
     
@@ -76,7 +75,7 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
     
     
     
-     public double MiniMax(GameStatus gs, int profunditat, int color, double alfa, double beta, boolean isMaximizer) {
+   public double MiniMax(GameStatus gs, int profunditat, int color, double alfa, double beta, boolean isMaximizer) {
     if (gs.isGameOver()) {
         if (gs.checkGameOver()) {
             if (gs.GetWinner() == maximizerPlayer) return Double.POSITIVE_INFINITY;
@@ -127,7 +126,7 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
     }
 
     return actualNodeValue;
-}
+    }
 
     private int Heuristic(GameStatus gs){
         return (gs.getScore(maximizerPlayer) - gs.getScore(minimizerPlayer));
