@@ -4,6 +4,8 @@
  */
 package edu.upc.epsevg.prop.checkers.players.javakillers;
 
+import edu.upc.epsevg.prop.checkers.CellType;
+import static edu.upc.epsevg.prop.checkers.CellType.P1Q;
 import edu.upc.epsevg.prop.checkers.GameStatus;
 import edu.upc.epsevg.prop.checkers.IAuto;
 import edu.upc.epsevg.prop.checkers.IPlayer;
@@ -27,13 +29,15 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
 
     private String name;
     private long exploredNodes;
-    private int depth;
+    private int depth, maxDepthReached;
     private PlayerType maximizerPlayer, minimizerPlayer;
 
     public PlayerMiniMax(int d) {
         this.name = "MiniMax";
         this.exploredNodes = 0;
         this.depth = d;
+        this.maxDepthReached = 0;
+        
     }
     
     
@@ -54,11 +58,9 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
         List<MoveNode> movementsList = gs.getMoves();
         for (int i = 0; i < movementsList.size(); i++) {
             for(List<Point> path : getAllPaths(movementsList.get(i))){
-                
                 GameStatus gs_copy = new GameStatus(gs);
-                System.out.println(path);
-                gs.movePiece(path);
-                double childNodeValue = MiniMax(gs_copy, i, depth - 1, alfa, beta, true); //Comprobar isMaximizer
+                gs_copy.movePiece(path);
+                double childNodeValue = MiniMax(gs_copy,depth -1 , alfa, beta, true); //Comprobar isMaximizer
                 if (actualNodeValue < childNodeValue) {
                     bestMovement = path;
                     actualNodeValue = childNodeValue;
@@ -69,63 +71,69 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
 
 
         System.out.println(" > Per aquest moviment s'han explorat " + exploredNodes + " jugades finals en :"+(System.currentTimeMillis()-timeant)+"ms");
-
-        return new PlayerMove(bestMovement, exploredNodes, depth, SearchType.MINIMAX);
+        
+        return new PlayerMove(bestMovement, exploredNodes, maxDepthReached, SearchType.MINIMAX);
     }
     
     
     
-   public double MiniMax(GameStatus gs, int profunditat, int color, double alfa, double beta, boolean isMaximizer) {
-    if (gs.isGameOver()) {
-        if (gs.checkGameOver()) {
-            if (gs.GetWinner() == maximizerPlayer) return Double.POSITIVE_INFINITY;
-            else return Double.NEGATIVE_INFINITY;
-        } else {
-            return 0;
+   public double MiniMax(GameStatus gs, int d, double alfa, double beta, boolean isMaximizer) {
+       if(depth - d > maxDepthReached) maxDepthReached++;
+       double actualNodeValue = 0;
+        if (d == 0) {
+            exploredNodes++;
+            actualNodeValue =  Heuristic(gs);
         }
-    } else if (profunditat == 0) {
-        exploredNodes++;
-        return Heuristic(gs);
-    }
-
-    double actualNodeValue;
-    if (isMaximizer) {
-        actualNodeValue = Double.NEGATIVE_INFINITY;
-        List<MoveNode> movementsList = gs.getMoves();
-        for (int i = 0; i < movementsList.size(); i++) {
-            for (List<Point> path : getAllPaths(movementsList.get(i))) {
-                GameStatus gs_copy = new GameStatus(gs);
-                gs_copy.movePiece(path);
-
-                actualNodeValue = Math.max(actualNodeValue,
-                        MiniMax(gs_copy, profunditat - 1, color, alfa, beta, false));
-
-                alfa = Math.max(actualNodeValue, alfa);
-                if (beta <= alfa) {
-                    break;
-                }
+        else if (d > 0){
+            exploredNodes++;
+            if (gs.isGameOver()) {
+                if (gs.checkGameOver()) {
+                    if (gs.GetWinner() == maximizerPlayer) actualNodeValue = Double.POSITIVE_INFINITY;
+                    else actualNodeValue =  Double.NEGATIVE_INFINITY;
+                } 
             }
+            else{
+               if (isMaximizer) {
+                    actualNodeValue = Double.NEGATIVE_INFINITY;
+                    List<MoveNode> movementsList = gs.getMoves();
+                    for (int i = 0; i < movementsList.size(); i++) {
+                        for (List<Point> path : getAllPaths(movementsList.get(i))) {
+                            GameStatus gs_copy = new GameStatus(gs);
+                            gs_copy.movePiece(path);
+
+                            actualNodeValue = Math.max(actualNodeValue,
+                                    MiniMax(gs_copy, d - 1,  alfa, beta, false));
+
+                            alfa = Math.max(actualNodeValue, alfa);
+                            if (beta <= alfa) {
+                                break;
+                            }
+                        }
+                    }
+                } 
+                else {
+                    actualNodeValue = Double.POSITIVE_INFINITY;
+                    List<MoveNode> movementsList = gs.getMoves();
+                    for (int i = 0; i < movementsList.size(); i++) {
+                        for (List<Point> path : getAllPaths(movementsList.get(i))) {
+                            GameStatus gs_copy = new GameStatus(gs);
+                            gs_copy.movePiece(path);
+
+                            actualNodeValue = Math.min(actualNodeValue,
+                                    MiniMax(gs_copy, d - 1,  alfa, beta, true));
+
+                            beta = Math.min(actualNodeValue, beta);
+                            if (beta <= alfa) {
+                                break;
+                            }
+                        }
+                    }
+                } 
+            
+            } 
+            
         }
-    } else {
-        actualNodeValue = Double.POSITIVE_INFINITY;
-        List<MoveNode> movementsList = gs.getMoves();
-        for (int i = 0; i < movementsList.size(); i++) {
-            for (List<Point> path : getAllPaths(movementsList.get(i))) {
-                GameStatus gs_copy = new GameStatus(gs);
-                gs_copy.movePiece(path);
-
-                actualNodeValue = Math.min(actualNodeValue,
-                        MiniMax(gs_copy, profunditat - 1, color, alfa, beta, true));
-
-                beta = Math.min(actualNodeValue, beta);
-                if (beta <= alfa) {
-                    break;
-                }
-            }
-        }
-    }
-
-    return actualNodeValue;
+        return actualNodeValue;
     }
 
     private int Heuristic(GameStatus gs){
@@ -162,4 +170,48 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
     public String getName() {
         return name;
     }
+    public void printGS(GameStatus gs){
+        /*
+        em = Pos buida
+        __ = Pos no valida
+        p1 = Player1
+        p2 = Player2
+        q1 = Dama/Reina 1
+        q2 = Dama/Reina2
+        */
+        String s = new String();
+        
+        for(int i = 0; i < gs.getSize(); i++){
+            for(int j = 0; j < gs.getSize(); j++){
+                if( (i % 2 == 0 && j % 2 == 0) || (i % 2 != 0 && j % 2 != 0)){
+                    s += "__";
+                }
+                else{
+                    CellType cell = gs.getPos(j, i);
+                    switch   (cell) {
+                        case EMPTY:
+                            s += "em";
+                            break;
+                        case P1:
+                            s+= "p1";
+                            break;
+                       case P2:
+                            s+= "p2";
+                            break;
+                       case P1Q:
+                          s+= "q1";
+                            break;  
+                       case P2Q:
+                          s+= "q2";
+                            break;
+                    }
+                }
+                
+                s += " ";
+            }
+            s += "\n";
+        }
+        System.out.println(s);
+    }
+    
 }
