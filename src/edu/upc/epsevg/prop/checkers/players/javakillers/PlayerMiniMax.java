@@ -31,7 +31,8 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
     private long exploredNodes;
     private int depth, maxDepthReached;
     private PlayerType maximizerPlayer, minimizerPlayer;
-
+    private final int CHECK_VALUE = 1;
+    private final int QUEEN_VALUE = 1;
     public PlayerMiniMax(int d) {
         this.name = "MiniMax";
         this.exploredNodes = 0;
@@ -56,20 +57,28 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
         double alfa = Double.NEGATIVE_INFINITY;
         double beta = Double.POSITIVE_INFINITY;
         List<MoveNode> movementsList = gs.getMoves();
-        for (int i = 0; i < movementsList.size(); i++) {
-            for(List<Point> path : getAllPaths(movementsList.get(i))){
-                GameStatus gs_copy = new GameStatus(gs);
-                gs_copy.movePiece(path);
-                double childNodeValue = MiniMax(gs_copy,depth -1 , alfa, beta, true); //Comprobar isMaximizer
-                if (actualNodeValue < childNodeValue) {
-                    bestMovement = path;
-                    actualNodeValue = childNodeValue;
+        List<Double> lv = new ArrayList<>();
+        if(gs.currentPlayerCanMove()){
+            for (int i = 0; i < movementsList.size(); i++) {
+                for(List<Point> path : getAllPaths(movementsList.get(i))){
+                    GameStatus gs_copy = new GameStatus(gs);
+                    if(path.size() > 0){
+                        gs_copy.movePiece(path);
+                        double childNodeValue = MiniMax(gs_copy,depth -1 , alfa, beta, false); //Comprobar isMaximizer
+                        lv.add(childNodeValue);
+                        if (actualNodeValue < childNodeValue) {
+                            bestMovement = path;
+                            actualNodeValue = childNodeValue;
+                        }
+                    }
+                   
+                    
                 }
             }
             
         }
-
-
+        else gs.forceLoser();
+        System.err.println("Valors de moviments: " + lv+"     bestmv = "+ actualNodeValue);
         System.out.println(" > Per aquest moviment s'han explorat " + exploredNodes + " jugades finals en :"+(System.currentTimeMillis()-timeant)+"ms");
         
         return new PlayerMove(bestMovement, exploredNodes, maxDepthReached, SearchType.MINIMAX);
@@ -137,7 +146,26 @@ public class PlayerMiniMax  implements IPlayer, IAuto{
     }
 
     private int Heuristic(GameStatus gs){
-        return (gs.getScore(maximizerPlayer) - gs.getScore(minimizerPlayer));
+        
+        
+        return count(gs, maximizerPlayer, minimizerPlayer);
+    }
+    private int count(GameStatus gs, PlayerType max, PlayerType min) {
+        int score = 0;
+        for( int i = 0; i < gs.getSize(); i++){
+            for (int j = 0; j < gs.getSize(); j++) {
+                CellType cell = gs.getPos(i, j);
+                if(cell.getPlayer() == max){
+                   score += CHECK_VALUE;
+                   if(cell.isQueen()) score += QUEEN_VALUE;
+                }
+                else if(cell.getPlayer() == min){
+                    score -= CHECK_VALUE;
+                   if(cell.isQueen()) score -= QUEEN_VALUE;
+                }
+            }
+        }
+        return score;
     }
     public static List<List<Point>> getAllPaths(MoveNode root) {
         List<List<Point>> allPaths = new ArrayList<>();
