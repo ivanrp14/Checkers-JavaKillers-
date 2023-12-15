@@ -9,10 +9,10 @@ package edu.upc.epsevg.prop.checkers.players.javakillers.utils;
  * @author ivanr
  */
 public class Node {
-    public double eval;
+    public int  eval;
 
-    public Node( double eval) {
-        
+    public Node( int eval) {
+       
         this.eval = eval;
     }
 
