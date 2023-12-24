@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author ivanr
  */
-public class Movement {
+public class Movement implements Comparable<Movement>{
     private List<Point> path;
     private List<Point> killsPoints;
 
@@ -35,6 +35,14 @@ public class Movement {
         return killsPoints;
     }
     
+    @Override
+    public int compareTo(Movement other) {
+        int thisKills = this.killsPoints.size();
+        int otherKills = other.getKillsPoints().size();
+
+        // Ordena de forma descendente (mayor número de muertes primero)
+        return Integer.compare(otherKills, thisKills);
+    }
     
     
 }

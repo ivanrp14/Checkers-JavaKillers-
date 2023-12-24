@@ -70,7 +70,7 @@ public class PlayerID implements IPlayer, IAuto {
         return pm;
     }
 
-    // Implementación del algoritmo MiniMax
+     // Implementación del algoritmo MiniMax
     private PlayerMove Minimax(GameStatus gs, int d, double alfa, double beta, long hash) {
         List<Movement> allMoves = getAllPaths(gs.getMoves());
         List<Double> lv = new ArrayList<>();
@@ -108,10 +108,6 @@ public class PlayerID implements IPlayer, IAuto {
     }
 
     private double MiniMax_r(GameStatus gs, int d, double alfa, double beta, long hash) {
-        
-        if(timeOut){
-            return Heuristic(gs);
-        }
         double actualNodeValue = 0;
         int bestMoveIndex = 0;
         double childNodeValue;
@@ -122,6 +118,7 @@ public class PlayerID implements IPlayer, IAuto {
         Node n = tt.get(hash);
 
         if (d == 0) {
+            if(n != null)return n.eval;
             return Heuristic(gs);
         } else if (d > 0) {
             if (gs.isGameOver()) {
@@ -396,61 +393,57 @@ public class PlayerID implements IPlayer, IAuto {
     }
 
 
-    
-    
+ public static List<Movement> getAllPaths(List<MoveNode> roots) {
+    List<Movement> allPaths = new ArrayList<>();
+    for (MoveNode root : roots) {
+        getAllPathsRecursive(root, new ArrayList<>(), new ArrayList<>(), allPaths);
+    }
+    return allPaths;
+}
+
+// Función recursiva para obtener todos los caminos posibles
+private static void getAllPathsRecursive(MoveNode node, List<Point> currentPath, List<Point> killsPoints,
+        List<Movement> allPaths) {
+    currentPath.add(node.getPoint());
+
+    if (node.isJump()) {
+        killsPoints.add(node.getJumpedPoint());
+    }
+
+    for (MoveNode child : node.getChildren()) {
+        getAllPathsRecursive(child, new ArrayList<>(currentPath), new ArrayList<>(killsPoints), allPaths);
+    }
+
+    if (node.getChildren().isEmpty()) {
+        Movement movement = new Movement(new ArrayList<>(currentPath), new ArrayList<>(killsPoints));
+        if(movement.getKillsPoints().size() > 0)insertSorted(movement, allPaths);
+        else allPaths.add(movement);
+    }
+}
+
+// Función para insertar el movimiento de manera ordenada en la lista
+private static void insertSorted(Movement newMovement, List<Movement> allPaths) {
+    int index = 0;
+    while (index < allPaths.size() && compareMovements(newMovement, allPaths.get(index)) > 0) {
+        index++;
+    }
+    allPaths.add(index, newMovement);
+}
+
+// Función de comparación para determinar el orden de los movimientos
+private static int compareMovements(Movement movement1, Movement movement2) {
+    // Implementa la lógica de comparación basada en tus criterios, por ejemplo, el número de muertes
+    int deaths1 = movement1.getKillsPoints().size();
+    int deaths2 = movement2.getKillsPoints().size();
+
+    return Integer.compare(deaths1, deaths2);
+}   
     
    
-    public static List<List<Point>> getAllPaths(MoveNode root) {
-        List<List<Point>> allPaths = new ArrayList<>();
-        getAllPathsRecursive(root, new ArrayList<>(), allPaths);
-        return allPaths;
-    }
-
-    private static void getAllPathsRecursive(MoveNode node, List<Point> currentPath, List<List<Point>> allPaths) {
-        currentPath.add(node.getPoint());
-
-        if (node.getChildren().isEmpty()) {
-            // Reached a leaf node, add the current path to the result
-            allPaths.add(new ArrayList<>(currentPath));
-        } else {
-            // Continue the traversal for each child
-            for (MoveNode child : node.getChildren()) {
-                getAllPathsRecursive(child, currentPath, allPaths);
-            }
-        }
-
-        // Remove the current node from the path to backtrack
-        currentPath.remove(currentPath.size() - 1);
-    }
-
    
-    public static List<Movement> getAllPaths(List<MoveNode> roots) {
-        List<Movement> allPaths = new ArrayList<>();
-        for (MoveNode root : roots) {
-            getAllPathsRecursive( root, new ArrayList<>(), new ArrayList<>(), allPaths);
-        }
-        return allPaths;
-    }
-
-    // Función recursiva para obtener todos los caminos posibles
-    private static void getAllPathsRecursive(MoveNode node, List<Point> currentPath, List<Point> killsPoints,
-            List<Movement> allPaths) {
-        currentPath.add(node.getPoint());
-
-        if (node.isJump()) {
-            killsPoints.add(node.getJumpedPoint());
-        }
-
-        for (MoveNode child : node.getChildren()) {
-            getAllPathsRecursive(child, new ArrayList<>(currentPath), new ArrayList<>(killsPoints), allPaths);
-        }
-
-        if (node.getChildren().isEmpty()) {
-            Movement movement = new Movement(new ArrayList<>(currentPath), new ArrayList<>(killsPoints));
-            allPaths.add(movement);
-        }
-    }
-
+    
+   
+    
     // Método de interfaz, no implementado aquí
     @Override
     public void timeout() {

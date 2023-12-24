@@ -25,7 +25,7 @@ public class HeadlessGame {
 
     public static void main(String[] args) {
 
-        IPlayer player1 = new PlayerMiniMax(10, 1);//GB
+        IPlayer player1 = new PlayerMiniMax(5);//GB
         IPlayer player2 = new OnePiecePlayer(0.001f);
 
         HeadlessGame game = new HeadlessGame(player1, player2, 1/*s timeout*/, 10/*games*/);

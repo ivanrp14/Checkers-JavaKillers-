@@ -32,7 +32,7 @@ public class Game {
                 //IPlayer player1 = new RandomPlayer("Kamikaze 1");
                 //IPlayer player2 = new RandomPlayer("Kamikaze 2");
                                 
-                    new Board(player1 , player2, 2, false);
+                    new Board(player1 , player2, 1, false);
              }
         });
     }
