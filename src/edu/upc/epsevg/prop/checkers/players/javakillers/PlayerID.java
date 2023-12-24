@@ -112,7 +112,7 @@ public class PlayerID implements IPlayer, IAuto {
         int bestMoveIndex = 0;
         double childNodeValue;
         exploredNodes++;
-
+        if(timeOut)return Heuristic(gs);
         if (depth - d > maxDepthReached) maxDepthReached++;
 
         Node n = tt.get(hash);
