@@ -59,16 +59,74 @@ public class PlayerMiniMax implements IPlayer, IAuto {
         return Minimax(gs, depth, alfa, beta, hash);
     }
 
-    // Implementación del algoritmo MiniMax
     private PlayerMove Minimax(GameStatus gs, int d, double alfa, double beta, long hash) {
-        List<Movement> allMoves = getAllPaths(gs.getMoves());
-        List<Double> lv = new ArrayList<>();
-        int bestMoveIndex = 0;
-        double actualNodeValue = Double.NEGATIVE_INFINITY;
-        double childNodeValue;
+    List<Movement> allMoves = getAllPaths(gs.getMoves());
+    List<Double> lv = new ArrayList<>();
+    int bestMoveIndex = 0;
+    double actualNodeValue = Double.NEGATIVE_INFINITY;
+    double childNodeValue;
 
-        if (gs.currentPlayerCanMove()) {
-            Node n = tt.get(hash);
+    if (gs.currentPlayerCanMove()) {
+        Node n = tt.get(hash);
+        if (n != null) {
+            Movement mov0 = allMoves.get(0);
+            Movement best = allMoves.get(n.bestMoveIndex);
+            allMoves.set(0, best);
+            allMoves.set(n.bestMoveIndex, mov0);
+        }
+
+        for (int i = 0; i < allMoves.size(); i++) {
+            Movement move = allMoves.get(i);
+            GameStatus gsCopy = new GameStatus(gs);
+            if (!move.getPath().isEmpty()) {
+                long h = makeMove(gsCopy, move, hash);
+                childNodeValue = MiniMax_r(gsCopy, d - 1, alfa, beta, h);
+                lv.add(childNodeValue);
+                if (childNodeValue > actualNodeValue) {
+                    bestMoveIndex = i;
+                    actualNodeValue = childNodeValue;
+                }
+            }
+
+            // Poda alfa-beta
+            alfa = Math.max(actualNodeValue, alfa);
+            if (beta <= alfa) {
+                break;
+            }
+        }
+    } else {
+        gs.forceLoser();
+    }
+
+    return new PlayerMove(allMoves.get(bestMoveIndex).getPath(), exploredNodes, maxDepthReached, SearchType.MINIMAX);
+}
+
+private double MiniMax_r(GameStatus gs, int d, double alfa, double beta, long hash) {
+    double actualNodeValue = 0;
+    int bestMoveIndex = 0;
+    double childNodeValue;
+    exploredNodes++;
+
+    // Obtener información de la tabla de transposición
+    Node n = tt.get(hash);
+
+    
+
+    // Actualizar la profundidad máxima alcanzada
+    if (depth - d > maxDepthReached) maxDepthReached++;
+
+    if (d == 0) {
+        if (n != null && n.type == Node.nType.EXACT) return n.eval;
+        return Heuristic(gs);
+    } else if (d > 0) {
+        if (gs.isGameOver()) {
+            if (gs.checkGameOver()) {
+                if (gs.GetWinner() == maximizerPlayer) return Double.POSITIVE_INFINITY;
+                else if (gs.GetWinner() == minimizerPlayer) return Double.NEGATIVE_INFINITY;
+            }
+        } else {
+            long h;
+            List<Movement> allMoves = getAllPaths(gs.getMoves());
             if (n != null) {
                 Movement mov0 = allMoves.get(0);
                 Movement best = allMoves.get(n.bestMoveIndex);
@@ -76,104 +134,57 @@ public class PlayerMiniMax implements IPlayer, IAuto {
                 allMoves.set(n.bestMoveIndex, mov0);
             }
 
-            for (int i = 0; i < allMoves.size(); i++) {
-                Movement move = allMoves.get(i);
-                GameStatus gsCopy = new GameStatus(gs);
-                if (!move.getPath().isEmpty()) {
-                    long h = makeMove(gsCopy, move, hash);
+            if (gs.getCurrentPlayer() == maximizerPlayer) {
+                if (n != null && n.depth >= d && n.type == Node.nType.ALFA) return n.eval;
+                actualNodeValue = Double.NEGATIVE_INFINITY;
+                for (int i = 0; i < allMoves.size(); i++) {
+                    Movement move = allMoves.get(i);
+                    GameStatus gsCopy = new GameStatus(gs);
+                    h = makeMove(gsCopy, move, hash);
                     childNodeValue = MiniMax_r(gsCopy, d - 1, alfa, beta, h);
-                    lv.add(childNodeValue);
+
                     if (childNodeValue > actualNodeValue) {
                         bestMoveIndex = i;
                         actualNodeValue = childNodeValue;
                     }
+
+                    // Poda alfa-beta
+                    alfa = Math.max(actualNodeValue, alfa);
+                    if (beta <= alfa) {
+                        break;
+                    }
                 }
-            }
-           
-        } else {
-            gs.forceLoser();
-        }
 
-        return new PlayerMove(allMoves.get(bestMoveIndex).getPath(), exploredNodes, maxDepthReached, SearchType.MINIMAX);
-    }
-
-      private double MiniMax_r(GameStatus gs, int d, double alfa, double beta, long hash) {
-        double actualNodeValue = 0;
-        int bestMoveIndex = 0;
-        double childNodeValue;
-        exploredNodes++;
-        Node n = tt.get(hash);
-       
-        if (depth - d > maxDepthReached) maxDepthReached++;
-
-        
-
-        if (d == 0) {
-            if(n != null && n.type == Node.nType.EXACT)return n.eval;
-            return Heuristic(gs);
-        } else if (d > 0) {
-            if (gs.isGameOver()) {
-                if (gs.checkGameOver()) {
-                    if (gs.GetWinner() == maximizerPlayer) return Double.POSITIVE_INFINITY;
-                    else if (gs.GetWinner() == minimizerPlayer) return Double.NEGATIVE_INFINITY;
-                }
+                // Actualizar la tabla de transposición
+                if (n == null || n.depth < d) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth, Node.nType.ALFA));
             } else {
-                long h;
-                List<Movement> allMoves = getAllPaths(gs.getMoves());
-                if (n != null) {
-                    
-                    Movement mov0 = allMoves.get(0);
-                    Movement best = allMoves.get(n.bestMoveIndex);
-                    allMoves.set(0, best);
-                    allMoves.set(n.bestMoveIndex, mov0);
-                }
-                
-                if (gs.getCurrentPlayer() == maximizerPlayer) {
-                    if( n != null && n.depth >= d && n.type == Node.nType.ALFA) return n.eval;
-                    actualNodeValue = Double.NEGATIVE_INFINITY;
-                    for (int i = 0; i < allMoves.size(); i++) {
-                        Movement move = allMoves.get(i);
-                        GameStatus gsCopy = new GameStatus(gs);
-                        h = makeMove(gsCopy, move, hash);
-                        childNodeValue = MiniMax_r(gsCopy, d - 1, alfa, beta, h);
+                if (n != null && n.depth >= d && n.type == Node.nType.BETA) return n.eval;
+                actualNodeValue = Double.POSITIVE_INFINITY;
+                for (int i = 0; i < allMoves.size(); i++) {
+                    Movement move = allMoves.get(i);
+                    GameStatus gsCopy = new GameStatus(gs);
+                    h = makeMove(gsCopy, move, hash);
+                    childNodeValue = MiniMax_r(gsCopy, d - 1, alfa, beta, h);
 
-                        if (childNodeValue > actualNodeValue) {
-                            bestMoveIndex = i;
-                            actualNodeValue = childNodeValue;
-                        }
-
-                        alfa = Math.max(actualNodeValue, alfa);
-                        if (beta <= alfa) {
-                            break;
-                        }
+                    if (childNodeValue < actualNodeValue) {
+                        bestMoveIndex = i;
+                        actualNodeValue = childNodeValue;
                     }
-                    if (n == null || n.depth < d) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth, Node.nType.ALFA));
-                } else {
-                    if( n != null && n.depth >= d && n.type == Node.nType.ALFA) return n.eval;
-                    actualNodeValue = Double.POSITIVE_INFINITY;
-                    for (int i = 0; i < allMoves.size(); i++) {
-                        Movement move = allMoves.get(i);
-                        GameStatus gsCopy = new GameStatus(gs);
-                        h = makeMove(gsCopy, move, hash);
-                        childNodeValue = MiniMax_r(gsCopy, d - 1, alfa, beta, h);
 
-                        if (childNodeValue < actualNodeValue) {
-                            bestMoveIndex = i;
-                            actualNodeValue = childNodeValue;
-                        }
-                        
-                        beta = Math.min(actualNodeValue, beta);
-                        if (beta <= alfa) {
-                            break;
-                        }
+                    // Poda alfa-beta
+                    beta = Math.min(actualNodeValue, beta);
+                    if (beta <= alfa) {
+                        break;
                     }
-                    if (n == null || n.depth < d) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth, Node.nType.BETA));
                 }
-                
+
+                // Actualizar la tabla de transposición
+                if (n == null || n.depth < d) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth, Node.nType.BETA));
             }
         }
-        return actualNodeValue;
     }
+    return actualNodeValue;
+}
    
  private double Heuristic(GameStatus gs) {
         // Definir los valores de las piezas y situaciones
