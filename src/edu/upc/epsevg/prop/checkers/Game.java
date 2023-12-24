@@ -27,12 +27,12 @@ public class Game {
             public void run() {
                 
                 
-                IPlayer player1 = new OnePiecePlayer(0.001f);
-                IPlayer player2 = new PlayerMiniMax(12,2);
+                IPlayer player1 = new PlayerID();//GB
+                IPlayer player2 = new OnePiecePlayer(0.1f);
                 //IPlayer player1 = new RandomPlayer("Kamikaze 1");
                 //IPlayer player2 = new RandomPlayer("Kamikaze 2");
                                 
-                new Board(player1 , player2, 1, false);
+                    new Board(player1 , player2, 2, false);
              }
         });
     }
