@@ -7,6 +7,7 @@ package edu.upc.epsevg.prop.checkers.players.javakillers.utils;
 import edu.upc.epsevg.prop.checkers.GameStatus;
 import java.nio.file.attribute.AclEntryFlag;
 import java.util.logging.Logger;
+import javax.swing.tree.ExpandVetoException;
 
 /**
  *
@@ -15,11 +16,14 @@ import java.util.logging.Logger;
 public class Node {
     public int bestMoveIndex, depth;
     public double eval;
-   
-    public Node(double eval, int bestMoveI, int depth) {
+    public nType type;
+    public enum nType{
+        EXACT, ALFA, BETA
+    }
+    public Node(double eval, int bestMoveI, int depth, nType type) {
         this.bestMoveIndex = bestMoveI;
         this.depth = depth;
-     
+        this.type = type;
         this.eval = eval;
     }
 

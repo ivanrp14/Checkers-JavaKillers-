@@ -89,6 +89,7 @@ public class PlayerMiniMax implements IPlayer, IAuto {
                     }
                 }
             }
+           
         } else {
             gs.forceLoser();
         }
@@ -96,18 +97,19 @@ public class PlayerMiniMax implements IPlayer, IAuto {
         return new PlayerMove(allMoves.get(bestMoveIndex).getPath(), exploredNodes, maxDepthReached, SearchType.MINIMAX);
     }
 
-    private double MiniMax_r(GameStatus gs, int d, double alfa, double beta, long hash) {
+      private double MiniMax_r(GameStatus gs, int d, double alfa, double beta, long hash) {
         double actualNodeValue = 0;
         int bestMoveIndex = 0;
         double childNodeValue;
         exploredNodes++;
-
+        Node n = tt.get(hash);
+       
         if (depth - d > maxDepthReached) maxDepthReached++;
 
-        Node n = tt.get(hash);
+        
 
         if (d == 0) {
-            if(n != null)return n.eval;
+            if(n != null && n.type == Node.nType.EXACT)return n.eval;
             return Heuristic(gs);
         } else if (d > 0) {
             if (gs.isGameOver()) {
@@ -119,13 +121,15 @@ public class PlayerMiniMax implements IPlayer, IAuto {
                 long h;
                 List<Movement> allMoves = getAllPaths(gs.getMoves());
                 if (n != null) {
+                    
                     Movement mov0 = allMoves.get(0);
                     Movement best = allMoves.get(n.bestMoveIndex);
                     allMoves.set(0, best);
                     allMoves.set(n.bestMoveIndex, mov0);
                 }
-
+                
                 if (gs.getCurrentPlayer() == maximizerPlayer) {
+                    if( n != null && n.depth >= d && n.type == Node.nType.ALFA) return n.eval;
                     actualNodeValue = Double.NEGATIVE_INFINITY;
                     for (int i = 0; i < allMoves.size(); i++) {
                         Movement move = allMoves.get(i);
@@ -143,7 +147,9 @@ public class PlayerMiniMax implements IPlayer, IAuto {
                             break;
                         }
                     }
+                    if (n == null || n.depth < d) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth, Node.nType.ALFA));
                 } else {
+                    if( n != null && n.depth >= d && n.type == Node.nType.ALFA) return n.eval;
                     actualNodeValue = Double.POSITIVE_INFINITY;
                     for (int i = 0; i < allMoves.size(); i++) {
                         Movement move = allMoves.get(i);
@@ -155,15 +161,15 @@ public class PlayerMiniMax implements IPlayer, IAuto {
                             bestMoveIndex = i;
                             actualNodeValue = childNodeValue;
                         }
-
+                        
                         beta = Math.min(actualNodeValue, beta);
                         if (beta <= alfa) {
                             break;
                         }
                     }
+                    if (n == null || n.depth < d) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth, Node.nType.BETA));
                 }
-
-                if (n == null || n.depth < (depth - d)) tt.put(hash, new Node(actualNodeValue, bestMoveIndex, depth));
+                
             }
         }
         return actualNodeValue;
