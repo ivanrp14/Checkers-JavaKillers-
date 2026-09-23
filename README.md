@@ -1,40 +1,40 @@
 # Checkers JavaKillers
 
-Jugador automático de **damas** para la práctica de PROP (EPSEVG, UPC). El bot del equipo JavaKillers elige jugada con **Minimax**.
+An automatic **checkers** player for the PROP course (EPSEVG, UPC). The JavaKillers bot picks a move with **Minimax**.
 
-## Qué hace
+## What it does
 
-- Juega dentro del marco `edu.upc.epsevg.prop.checkers` (`IPlayer`, `IAuto`).
-- `PlayerMiniMax` explora el árbol de jugadas hasta una profundidad dada y se queda con la mejor para el jugador que maximiza.
-- Apoyo de `Movement`, `Node` y hashing **Zobrist** para no reevaluar posiciones.
-- Incluye también un jugador humano y uno aleatorio para probar partidas.
-- Hay una `Game` con interfaz y una `HeadlessGame` sin ventana.
+- Plays inside the `edu.upc.epsevg.prop.checkers` framework (`IPlayer`, `IAuto`).
+- `PlayerMiniMax` searches the move tree up to a given depth and keeps the best move for the maximizing player.
+- `Movement`, `Node`, and **Zobrist** hashing avoid re-evaluating positions.
+- A human player and a random player are included so you can test games.
+- `Game` has a UI; `HeadlessGame` runs without a window.
 
 ## Stack
 
 - Java
-- Swing para el tablero con controles (`JControlsPanel`)
-- Proyecto NetBeans (`build.xml`, `nbproject`)
+- Swing for the board and controls (`JControlsPanel`)
+- NetBeans project (`build.xml`, `nbproject`)
 
-## Estructura
+## Layout
 
 ```
 src/edu/upc/epsevg/prop/checkers/
-├── Game.java                      # partida con interfaz
-├── HeadlessGame.java              # partida sin interfaz
+├── Game.java                      # game with UI
+├── HeadlessGame.java              # game without UI
 ├── Board.java
 ├── players/HumanPlayer.java
 ├── players/RandomPlayer.java
 └── players/javakillers/
-    ├── PlayerMiniMax.java         # bot Minimax
+    ├── PlayerMiniMax.java         # Minimax bot
     ├── PlayerID.java
     └── utils/                     # Movement, Node, Zobrist
 ```
 
-`lib/javadoc` es la documentación generada del paquete de damas, no el código del bot.
+`lib/javadoc` is generated documentation for the checkers package, not the bot source.
 
-## Cómo ejecutarlo
+## How to run
 
-Abre el proyecto en NetBeans y ejecuta `edu.upc.epsevg.prop.checkers.Game`.
+Open the project in NetBeans and run `edu.upc.epsevg.prop.checkers.Game`.
 
-Elige el jugador `PlayerMiniMax` como uno de los dos bandos. La profundidad y el conteo de nodos explorados están en esa clase.
+Pick `PlayerMiniMax` as one of the two sides. Depth and the explored-node count live in that class.
